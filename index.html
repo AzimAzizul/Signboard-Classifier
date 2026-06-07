@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signboard Classifier</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .upload-box {
+            border: 3px dashed #ccc;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+        #preview {
+            max-width: 100%;
+            max-height: 250px;
+            margin: 20px 0;
+            border-radius: 10px;
+            display: none;
+        }
+        #result {
+            font-size: 24px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #e8f4f8;
+            border-radius: 10px;
+            display: none;
+        }
+        .error {
+            background: #ffe0e0;
+            color: #d00;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        #status {
+            color: #666;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚏 Signboard Classifier</h1>
+        <p>Upload a photo of a signboard</p>
+        
+        <div class="upload-box" id="uploadBox">
+            📸 Click or drag image here
+        </div>
+        
+        <input type="file" id="fileInput" accept="image/*" style="display:none">
+        
+        <img id="preview">
+        
+        <div id="result"></div>
+        
+        <button id="clearBtn">Clear</button>
+        
+        <div id="status">⏳ Loading AI model...</div>
+    </div>
+
+    <script>
+        // YOUR MODEL URL - Replace this if different
+        const MODEL_URL = "https://teachablemachine.withgoogle.com/models/D5C3cI1vU/";
+        
+        let model = null;
+        
+        // Get elements
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const resultDiv = document.getElementById('result');
+        const statusDiv = document.getElementById('status');
+        const clearBtn = document.getElementById('clearBtn');
+        
+        // Load the model when page starts
+        async function loadModel() {
+            try {
+                statusDiv.innerHTML = '🔄 Loading AI model... Please wait';
+                statusDiv.style.color = '#666';
+                
+                model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+                
+                statusDiv.innerHTML = '✅ AI model ready! Upload a signboard image.';
+                statusDiv.style.color = 'green';
+            } catch(error) {
+                statusDiv.innerHTML = '❌ Error loading model: ' + error.message;
+                statusDiv.style.color = 'red';
+                console.error('Model load error:', error);
+            }
+        }
+        
+        // Classify an image
+        async function classifyImage(imageElement) {
+            if (!model) {
+                resultDiv.innerHTML = 'Model not loaded yet. Please wait.';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '🔍 Analyzing signboard...';
+                
+                const predictions = await model.predict(imageElement);
+                
+                // Find the best prediction
+                let bestPrediction = predictions[0];
+                for (let i = 1; i < predictions.length; i++) {
+                    if (predictions[i].probability > bestPrediction.probability) {
+                        bestPrediction = predictions[i];
+                    }
+                }
+                
+                const confidence = (bestPrediction.probability * 100).toFixed(1);
+                const signType = bestPrediction.className;
+                
+                resultDiv.innerHTML = `
+                    <strong>🚦 Signboard Type:</strong> ${signType}<br>
+                    <strong>📊 Confidence:</strong> ${confidence}%
+                `;
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = '#e8f4f8';
+                
+                statusDiv.innerHTML = '✅ Classification complete!';
+                statusDiv.style.color = 'green';
+                
+            } catch(error) {
+                resultDiv.innerHTML = 'Error during classification: ' + error.message;
+                resultDiv.style.display = 'block';
+                resultDiv.style.background = '#ffe0e0';
+                console.error('Classification error:', error);
+            }
+        }
+        
+        // Handle file upload
+        function handleFile(file) {
+            if (!file || !file.type.match('image.*')) {
+                alert('Please upload an image file (jpg, png, etc.)');
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                
+                // Create image element for classification
+                const img = new Image();
+                img.onload = function() {
+                    classifyImage(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // Click upload box
+        uploadBox.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // File selected
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // Drag and drop
+        uploadBox.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#667eea';
+            uploadBox.style.background = '#f0f0ff';
+        });
+        
+        uploadBox.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#ccc';
+            uploadBox.style.background = '#fafafa';
+        });
+        
+        uploadBox.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#ccc';
+            uploadBox.style.background = '#fafafa';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.match('image.*')) {
+                handleFile(file);
+            } else {
+                alert('Please drop an image file');
+            }
+        });
+        
+        // Clear button
+        clearBtn.addEventListener('click', function() {
+            preview.style.display = 'none';
+            preview.src = '';
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            fileInput.value = '';
+            statusDiv.innerHTML = '✅ Ready. Upload a signboard image.';
+            statusDiv.style.color = 'green';
+        });
+        
+        // Start the app
+        loadModel();
+    </script>
+</body>
+</html>
