@@ -496,10 +496,41 @@
         reader.readAsDataURL(file);
     }
 
-    // ===== SAMPLE IMAGE (placeholder - you can add actual sample images later) =====
+        // ===== SAMPLE IMAGES =====
+    const sampleImages = [
+        { name: 'Bump', file: 'sample-bump.jpg', icon: '⚠️' },
+        { name: 'Caution', file: 'sample-caution.jpg', icon: '🔶' },
+        { name: 'One Way', file: 'sample-oneway.jpg', icon: '➡️' },
+        { name: 'No Entry', file: 'sample-noentry.jpg', icon: '🚫' }
+    ];
+    let sampleIndex = 0;
+
     function loadSample() {
-        // This just shows a message - you can replace with actual sample images if you have them
-        alert('📸 Add sample images to your project folder and reference them here.\n\nTip: Upload a real signboard photo from your computer to test the AI!');
+        // Get the next sample
+        const sample = sampleImages[sampleIndex % sampleImages.length];
+        sampleIndex++;
+        
+        // Show loading status
+        statusDiv.innerHTML = `🔄 Loading sample: ${sample.icon} ${sample.name}...`;
+        statusDiv.style.color = '#64748b';
+        
+        // Clear previous result
+        resultDiv.style.display = 'none';
+        resultDiv.innerHTML = '';
+        
+        // Load and classify
+        const img = new Image();
+        img.onload = function() {
+            preview.src = img.src;
+            preview.style.display = 'block';
+            classifyImage(img);
+        };
+        img.onerror = function() {
+            statusDiv.innerHTML = '❌ Sample image missing. Upload your own photo!';
+            statusDiv.style.color = 'red';
+            alert('📸 Sample images not found!\n\nPlease upload these files to your GitHub repository:\n- sample-bump.jpg\n- sample-caution.jpg\n- sample-oneway.jpg\n- sample-noentry.jpg\n\nOr just upload your own signboard photo.');
+        };
+        img.src = sample.file;
     }
 
     // ===== EVENT LISTENERS =====
