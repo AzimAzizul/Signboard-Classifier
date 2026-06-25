@@ -93,13 +93,18 @@
             border-radius: 12px;
             border: 1px solid #e9edf2;
             transition: all 0.2s;
-            cursor: default;
+            cursor: pointer; /* Changed from default to pointer */
         }
 
         .signboard-item:hover {
             border-color: #667eea;
             transform: translateX(4px);
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+            background: #f5f7ff; /* Added hover background */
+        }
+
+        .signboard-item:active {
+            transform: scale(0.97); /* Click feedback */
         }
 
         .signboard-icon {
@@ -316,7 +321,7 @@
     <header class="header">
         <h1>🚏 Signboard Classifier</h1>
         <div class="tagline">AI-powered signboard recognition for road safety</div>
-        <div class="subtitle">Upload a photo to classify: Bump, Caution, One Way, or No Entry</div>
+        <div class="subtitle">Upload a photo or click a signboard below to test</div>
     </header>
 
     <!-- ===== MAIN CONTENT ===== -->
@@ -324,9 +329,9 @@
 
         <!-- LEFT SIDEBAR - Signboards the AI knows -->
         <aside class="sidebar">
-            <div class="sidebar-title">🧠 Trained On These</div>
+            <div class="sidebar-title">🧠 Click to Test Sample</div>
 
-            <div class="signboard-item">
+            <div class="signboard-item" data-sample="bonggol">
                 <div class="signboard-icon">⚠️</div>
                 <div class="signboard-info">
                     <span class="signboard-name">Bonggol</span>
@@ -334,7 +339,7 @@
                 </div>
             </div>
 
-            <div class="signboard-item">
+            <div class="signboard-item" data-sample="awas">
                 <div class="signboard-icon">🔶</div>
                 <div class="signboard-info">
                     <span class="signboard-name">Awas</span>
@@ -342,7 +347,7 @@
                 </div>
             </div>
 
-            <div class="signboard-item">
+            <div class="signboard-item" data-sample="jalansehala">
                 <div class="signboard-icon">➡️</div>
                 <div class="signboard-info">
                     <span class="signboard-name">Jalan sehala</span>
@@ -350,7 +355,7 @@
                 </div>
             </div>
 
-            <div class="signboard-item">
+            <div class="signboard-item" data-sample="dilarangmasuk">
                 <div class="signboard-icon">🚫</div>
                 <div class="signboard-info">
                     <span class="signboard-name">Dilarang masuk</span>
@@ -379,7 +384,6 @@
 
             <div class="actions">
                 <button id="clearBtn">Clear</button>
-                <button class="secondary" id="sampleBtn">Try Sample</button>
             </div>
 
             <div id="status">⏳ Loading AI model...</div>
@@ -412,7 +416,6 @@
     const resultDiv = document.getElementById('result');
     const statusDiv = document.getElementById('status');
     const clearBtn = document.getElementById('clearBtn');
-    const sampleBtn = document.getElementById('sampleBtn');
 
     // ===== LOAD MODEL =====
     async function loadModel() {
@@ -422,7 +425,7 @@
 
             model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
 
-            statusDiv.innerHTML = '✅ AI model ready! Upload a signboard image.';
+            statusDiv.innerHTML = '✅ AI model ready! Upload a signboard image or click a sample below.';
             statusDiv.style.color = 'green';
         } catch (error) {
             statusDiv.innerHTML = '❌ Error loading model: ' + error.message;
@@ -496,20 +499,23 @@
         reader.readAsDataURL(file);
     }
 
-        // ===== SAMPLE IMAGES =====
-    const sampleImages = [
-        { name: 'Bump', file: 'sample-bump.jpg', icon: '⚠️' },
-        { name: 'Caution', file: 'sample-caution.jpg', icon: '🔶' },
-        { name: 'One Way', file: 'sample-oneway.jpg', icon: '➡️' },
-        { name: 'No Entry', file: 'sample-noentry.jpg', icon: '🚫' }
-    ];
-    let sampleIndex = 0;
+    // ===== SAMPLE IMAGES MAPPING =====
+    const sampleImages = {
+        'bonggol': { name: 'Bonggol', file: 'sample-bonggol.jpg', icon: '⚠️' },
+        'awas': { name: 'Awas', file: 'sample-awas.jpg', icon: '🔶' },
+        'jalansehala': { name: 'Jalan sehala', file: 'sample-jalansehala.jpg', icon: '➡️' },
+        'dilarangmasuk': { name: 'Dilarang masuk', file: 'sample-dilarangmasuk.jpg', icon: '🚫' }
+    };
 
-    function loadSample() {
-        // Get the next sample
-        const sample = sampleImages[sampleIndex % sampleImages.length];
-        sampleIndex++;
-        
+    // ===== LOAD SAMPLE FROM SIDEBAR CLICK =====
+    function loadSample(sampleKey) {
+        const sample = sampleImages[sampleKey];
+        if (!sample) {
+            statusDiv.innerHTML = '❌ Unknown sample type';
+            statusDiv.style.color = 'red';
+            return;
+        }
+
         // Show loading status
         statusDiv.innerHTML = `🔄 Loading sample: ${sample.icon} ${sample.name}...`;
         statusDiv.style.color = '#64748b';
@@ -526,9 +532,9 @@
             classifyImage(img);
         };
         img.onerror = function() {
-            statusDiv.innerHTML = '❌ Sample image missing. Upload your own photo!';
+            statusDiv.innerHTML = `❌ Sample image for "${sample.name}" not found. Upload your own photo!`;
             statusDiv.style.color = 'red';
-            alert('📸 Sample images not found!\n\nPlease upload these files to your GitHub repository:\n- sample-bump.jpg\n- sample-caution.jpg\n- sample-oneway.jpg\n- sample-noentry.jpg\n\nOr just upload your own signboard photo.');
+            alert(`📸 Sample image not found!\n\nPlease upload this file to your website folder:\n- ${sample.file}\n\nOr just upload your own signboard photo.`);
         };
         img.src = sample.file;
     }
@@ -580,12 +586,19 @@
         resultDiv.style.display = 'none';
         resultDiv.innerHTML = '';
         fileInput.value = '';
-        statusDiv.innerHTML = '✅ Ready. Upload a signboard image.';
+        statusDiv.innerHTML = '✅ Ready. Upload a signboard image or click a sample below.';
         statusDiv.style.color = 'green';
     });
 
-    // Sample button
-    sampleBtn.addEventListener('click', loadSample);
+    // ===== SIDEBAR CLICK HANDLERS =====
+    document.querySelectorAll('.signboard-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            const sampleKey = this.dataset.sample;
+            if (sampleKey) {
+                loadSample(sampleKey);
+            }
+        });
+    });
 
     // ===== START =====
     loadModel();
