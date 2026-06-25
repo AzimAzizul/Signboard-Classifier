@@ -107,11 +107,11 @@
             transform: scale(0.97);
         }
 
-        /* Updated: Signboard thumbnail image */
+        /* Updated: Rectangle thumbnail - wider than tall */
         .signboard-thumb {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
+            width: 60px;      /* Wider */
+            height: 44px;      /* Taller than before but still rectangle */
+            border-radius: 8px;
             object-fit: cover;
             flex-shrink: 0;
             border: 1px solid #e9edf2;
@@ -121,6 +121,7 @@
         .signboard-info {
             display: flex;
             flex-direction: column;
+            flex: 1;
         }
 
         .signboard-name {
