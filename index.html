@@ -93,30 +93,29 @@
             border-radius: 12px;
             border: 1px solid #e9edf2;
             transition: all 0.2s;
-            cursor: pointer; /* Changed from default to pointer */
+            cursor: pointer;
         }
 
         .signboard-item:hover {
             border-color: #667eea;
             transform: translateX(4px);
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-            background: #f5f7ff; /* Added hover background */
+            background: #f5f7ff;
         }
 
         .signboard-item:active {
-            transform: scale(0.97); /* Click feedback */
+            transform: scale(0.97);
         }
 
-        .signboard-icon {
-            font-size: 28px;
+        /* Updated: Signboard thumbnail image */
+        .signboard-thumb {
             width: 44px;
             height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f1f5f9;
             border-radius: 10px;
+            object-fit: cover;
             flex-shrink: 0;
+            border: 1px solid #e9edf2;
+            background: white;
         }
 
         .signboard-info {
@@ -332,7 +331,7 @@
             <div class="sidebar-title">🧠 Click to Test Sample</div>
 
             <div class="signboard-item" data-sample="bonggol">
-                <div class="signboard-icon">⚠️</div>
+                <img class="signboard-thumb" src="sample-bump.jpg" alt="Bonggol sign">
                 <div class="signboard-info">
                     <span class="signboard-name">Bonggol</span>
                     <span class="signboard-desc">Road bump ahead</span>
@@ -340,7 +339,7 @@
             </div>
 
             <div class="signboard-item" data-sample="awas">
-                <div class="signboard-icon">🔶</div>
+                <img class="signboard-thumb" src="sample-caution.jpg" alt="Awas sign">
                 <div class="signboard-info">
                     <span class="signboard-name">Awas</span>
                     <span class="signboard-desc">General warning</span>
@@ -348,7 +347,7 @@
             </div>
 
             <div class="signboard-item" data-sample="jalansehala">
-                <div class="signboard-icon">➡️</div>
+                <img class="signboard-thumb" src="sample-oneway.jpg" alt="Jalan sehala sign">
                 <div class="signboard-info">
                     <span class="signboard-name">Jalan sehala</span>
                     <span class="signboard-desc">Directional sign</span>
@@ -356,7 +355,7 @@
             </div>
 
             <div class="signboard-item" data-sample="dilarangmasuk">
-                <div class="signboard-icon">🚫</div>
+                <img class="signboard-thumb" src="sample-noentry.jpg" alt="Dilarang masuk sign">
                 <div class="signboard-info">
                     <span class="signboard-name">Dilarang masuk</span>
                     <span class="signboard-desc">Do not enter</span>
